@@ -11,14 +11,15 @@ namespace HospitalDomain.Entites.App
     {
         public string Name { get; set; }
         public string EmployeeId { get; set; }
-        public Session Session { get; set; }
 
-        [ForeignKey("Session")]
         public int SessionId { get; set; }
 
-        public History History { get; set; }
+        [ForeignKey("SessionId")]
+        public Session Session { get; set; }
 
-        [ForeignKey("History")]
         public int HistoryId { get; set; }
+
+        [ForeignKey("HistoryId")]
+        public History History { get; set; }
     }
 }
