@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HospitalDomain\HospitalDomain.csproj" />
+    <ProjectReference Include="..\HospitalInfrastructure\HospitalInfrastructure.csproj" />
   </ItemGroup>
 
 </Project>
