@@ -1,6 +1,7 @@
 using HospitalDomain.Entites.Identity;
 using HospitalInfrastructure.AppContext;
 using HospitalInfrastructure.IdentityContext;
+using HospitalAPP.ServicesExtension;
 using Microsoft.EntityFrameworkCore;
 
 namespace HospitalAppAPI
@@ -29,6 +30,8 @@ namespace HospitalAppAPI
 
             builder.Services.AddIdentityCore<Employee>().AddEntityFrameworkStores<AccountContext>();
             builder.Services.AddIdentityCore<Guest>().AddEntityFrameworkStores<AccountContext>();
+            builder.Services.AddAplicationServices();
+            builder.Services.AddIdentityServices(builder.Configuration);
 
             var app = builder.Build();
 
