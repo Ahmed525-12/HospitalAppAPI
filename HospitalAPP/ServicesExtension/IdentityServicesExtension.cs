@@ -1,4 +1,6 @@
-﻿using HospitalDomain.Entites.Identity;
+﻿using HospitalAPP.JWTToken.Interace;
+using HospitalAPP.JWTToken.WorkToken;
+using HospitalDomain.Entites.Identity;
 using HospitalInfrastructure.IdentityContext;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -17,6 +19,7 @@ namespace HospitalAPP.ServicesExtension
     {
         public static IServiceCollection AddIdentityServices(this IServiceCollection Services, IConfiguration _configuration)
         {
+            Services.AddScoped<ITokenService, TokenService>();
             Services.AddIdentity<Account, IdentityRole>()
                             .AddEntityFrameworkStores<AccountContext>();
 
@@ -38,7 +41,6 @@ namespace HospitalAPP.ServicesExtension
                             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Key"]))
                         };
                     });
-
             return Services;
         }
     }
