@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using HospitalDomain.DTOS;
+using HospitalDomain.Entites.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +13,7 @@ namespace HospitalAPP.Mappes
     {
         public MappingProfiles()
         {
+            CreateMap<Guest, GuestDto>().ReverseMap();
         }
     }
 }

@@ -20,8 +20,6 @@ namespace HospitalAPP.ServicesExtension
         public static IServiceCollection AddIdentityServices(this IServiceCollection Services, IConfiguration _configuration)
         {
             Services.AddScoped<ITokenService, TokenService>();
-            Services.AddIdentity<Account, IdentityRole>()
-                            .AddEntityFrameworkStores<AccountContext>();
 
             Services.AddAuthentication(Option =>
             {

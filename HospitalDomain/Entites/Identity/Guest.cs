@@ -8,6 +8,6 @@ namespace HospitalDomain.Entites.Identity
 {
     public class Guest : Account
     {
-        public int IdentityCardNumber { get; set; }
+        public long IdentityCardNumber { get; set; }
     }
 }
