@@ -53,7 +53,8 @@ namespace HospitalAppAPI.Controllers
                     DisplayName = registerDto.DisplayName,
                     Email = registerDto.Email,
                     IdentityCardNumber = registerDto.IdentityCardNumber,
-                    UserName = registerDto.Email.Split('@')[0]
+                    UserName = registerDto.Email.Split('@')[0],
+                    EmailConfirmed = true
                 };
                 var Result = await _guestManager.CreateAsync(user, registerDto.Password);
 
@@ -91,6 +92,7 @@ namespace HospitalAppAPI.Controllers
                     UserName = registerDto.Email.Split('@')[0],
                     Salary = registerDto.Salary,
                     ShiftOfWork = registerDto.ShiftOfWork,
+                    EmailConfirmed = true
                 };
                 var Result = await _employeeManager.CreateAsync(user, registerDto.Password);
 
@@ -158,6 +160,60 @@ namespace HospitalAppAPI.Controllers
             catch (Exception ex)
             {
                 return Ok(Result<EmployeeDTO>.Fail(ex.Message));
+            }
+        }
+
+        [HttpPost("GuestLogin")]
+        public async Task<ActionResult<GuestDto>> GuestLogin(GuestDTOLogin logInDto)
+        {
+            try
+            {
+                var user = await _guestManager.FindByEmailAsync(logInDto.Email);
+                if (user == null)
+                {
+                    return Unauthorized(new ApiResponse(401, "User Not Found"));
+                }
+
+                if (!user.EmailConfirmed)
+                {
+                    return BadRequest(new ApiResponse(400, "Email not confirmed"));
+                }
+
+                if (await _guestManager.IsLockedOutAsync(user))
+                {
+                    return BadRequest(new ApiResponse(400, "User is locked out"));
+                }
+                if (user.IdentityCardNumber != logInDto.IdentityCardNumber)
+                {
+                    return BadRequest(new ApiResponse(400, "IdentityCardNumber Is Wrong "));
+                }
+                var resultcode = await _signInManagerGuest.CheckPasswordSignInAsync(user, logInDto.Password, false);
+
+                if (!resultcode.Succeeded)
+                {
+                    if (resultcode.IsLockedOut)
+                        return BadRequest(new ApiResponse(400, "User is locked out"));
+                    if (resultcode.IsNotAllowed)
+                        return BadRequest(new ApiResponse(400, "User is not allowed to sign in"));
+                    if (resultcode.RequiresTwoFactor)
+                        return BadRequest(new ApiResponse(400, "Two-factor authentication required"));
+
+                    return BadRequest(new ApiResponse(400, "Invalid login attempt"));
+                }
+
+                var returnedUser = new GuestDto
+                {
+                    Email = logInDto.Email,
+                    IdentityCardNumber = logInDto.IdentityCardNumber,
+
+                    Token = _tokenService.CreateTokenAsync(user)
+                };
+
+                return Ok((Result<GuestDto>.Success(returnedUser, "Create successful")));
+            }
+            catch (Exception ex)
+            {
+                return Ok(Result<GuestDto>.Fail(ex.Message));
             }
         }
 
