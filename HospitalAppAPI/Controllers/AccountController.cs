@@ -11,19 +11,33 @@ namespace HospitalAppAPI.Controllers
 {
     public class AccountController : BaseController
     {
-        private readonly UserManager<Guest> _GuestManager;
-        private readonly SignInManager<Guest> _signInManager;
+        private readonly ILogger<AccountController> _logger;
+
+        private readonly UserManager<Guest> _guestManager;
+        private readonly SignInManager<Guest> _signInManagerGuest;
         private readonly UserManager<Employee> _employeeManager;
         private readonly SignInManager<Employee> _signInManagerEmployee;
+        private readonly UserManager<Account> _accountManager;
+        private readonly SignInManager<Account> _signInManagerAccount;
         private readonly ITokenService _tokenService;
 
-        public AccountController(UserManager<Guest> GuestManager, SignInManager<Guest> signInManager, UserManager<Employee> EmployeeManager, SignInManager<Employee> signInManagerEmployee, ITokenService tokenService)
+        public AccountController(UserManager<Guest> guestManager,
+        SignInManager<Guest> signInManagerGuest,
+        UserManager<Employee> employeeManager,
+        SignInManager<Employee> signInManagerEmployee,
+        UserManager<Account> accountManager,
+        SignInManager<Account> signInManagerAccount,
+        ITokenService tokenService,
+            ILogger<AccountController> logger)
         {
-            _GuestManager = GuestManager;
-            _signInManager = signInManager;
-            _employeeManager = EmployeeManager;
+            _guestManager = guestManager;
+            _signInManagerGuest = signInManagerGuest;
+            _employeeManager = employeeManager;
             _signInManagerEmployee = signInManagerEmployee;
+            _accountManager = accountManager;
+            _signInManagerAccount = signInManagerAccount;
             _tokenService = tokenService;
+            _logger = logger;
         }
 
         [HttpPost("GuestRegister")]
@@ -41,7 +55,7 @@ namespace HospitalAppAPI.Controllers
                     IdentityCardNumber = registerDto.IdentityCardNumber,
                     UserName = registerDto.Email.Split('@')[0]
                 };
-                var Result = await _GuestManager.CreateAsync(user, registerDto.Password);
+                var Result = await _guestManager.CreateAsync(user, registerDto.Password);
 
                 if (!Result.Succeeded) return BadRequest(new ApiResponse(400, "register fail"));
 
@@ -94,14 +108,63 @@ namespace HospitalAppAPI.Controllers
             }
             catch (Exception ex)
             {
-                return Ok(Result<Guest>.Fail(ex.Message));
+                return Ok(Result<EmployeeDTO>.Fail(ex.Message));
+            }
+        }
+
+        [HttpPost("EmployeeLogin")]
+        public async Task<ActionResult<EmployeeDTO>> EmployeeLogin(EmployeeDTOLogin logInDto)
+        {
+            try
+            {
+                var user = await _employeeManager.FindByEmailAsync(logInDto.Email);
+                if (user == null)
+                {
+                    return Unauthorized(new ApiResponse(401, "User Not Found"));
+                }
+
+                if (!user.EmailConfirmed)
+                {
+                    return BadRequest(new ApiResponse(400, "Email not confirmed"));
+                }
+
+                if (await _employeeManager.IsLockedOutAsync(user))
+                {
+                    return BadRequest(new ApiResponse(400, "User is locked out"));
+                }
+
+                var resultcode = await _signInManagerEmployee.CheckPasswordSignInAsync(user, logInDto.Password, false);
+
+                if (!resultcode.Succeeded)
+                {
+                    if (resultcode.IsLockedOut)
+                        return BadRequest(new ApiResponse(400, "User is locked out"));
+                    if (resultcode.IsNotAllowed)
+                        return BadRequest(new ApiResponse(400, "User is not allowed to sign in"));
+                    if (resultcode.RequiresTwoFactor)
+                        return BadRequest(new ApiResponse(400, "Two-factor authentication required"));
+
+                    return BadRequest(new ApiResponse(400, "Invalid login attempt"));
+                }
+
+                var returnedUser = new EmployeeDTO
+                {
+                    Email = logInDto.Email,
+                    Token = _tokenService.CreateTokenAsync(user)
+                };
+
+                return Ok((Result<EmployeeDTO>.Success(returnedUser, "Create successful")));
+            }
+            catch (Exception ex)
+            {
+                return Ok(Result<EmployeeDTO>.Fail(ex.Message));
             }
         }
 
         [HttpGet("IsGuestExist")]
         public async Task<ActionResult<bool>> CheckIfGuestExist(string Email)
         {
-            return await _GuestManager.FindByEmailAsync(Email) is not null;
+            return await _guestManager.FindByEmailAsync(Email) is not null;
         }
 
         [HttpGet("IsEmployeeExist")]

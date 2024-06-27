@@ -20,13 +20,15 @@ namespace HospitalAppAPI
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            // Configure the database context for Hospital
             builder.Services.AddDbContext<HospitalContext>(options =>
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
-            // Configure the database context
+
+            // Configure the database context for Identity
             builder.Services.AddDbContext<AccountContext>(options =>
-                  options.UseSqlServer(builder.Configuration.GetConnectionString("AppIdentityConnection")));
+                options.UseSqlServer(builder.Configuration.GetConnectionString("AppIdentityConnection")));
 
             // Configure Identity for Account with default UI
             builder.Services.AddDefaultIdentity<Account>(options => options.SignIn.RequireConfirmedAccount = true)
@@ -34,15 +36,14 @@ namespace HospitalAppAPI
                 .AddEntityFrameworkStores<AccountContext>();
 
             // Configure Identity for Employee
-            builder.Services.AddIdentityCore<Employee>(options => { /* Employee-specific options */ })
+            builder.Services.AddIdentityCore<Employee>(options => { })
                 .AddEntityFrameworkStores<AccountContext>()
                 .AddSignInManager<SignInManager<Employee>>(); // Add SignInManager if needed
 
             // Configure Identity for Guest
-            builder.Services.AddIdentityCore<Guest>(options => { /* Guest-specific options */ })
+            builder.Services.AddIdentityCore<Guest>(options => { })
                 .AddEntityFrameworkStores<AccountContext>()
                 .AddSignInManager<SignInManager<Guest>>(); // Add SignInManager if needed
-
             builder.Services.AddAplicationServices();
             builder.Services.AddIdentityServices(builder.Configuration);
 
