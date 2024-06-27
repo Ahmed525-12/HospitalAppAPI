@@ -31,7 +31,7 @@ namespace HospitalAppAPI
                 options.UseSqlServer(builder.Configuration.GetConnectionString("AppIdentityConnection")));
 
             // Configure Identity for Account with default UI
-            builder.Services.AddDefaultIdentity<Account>(options => options.SignIn.RequireConfirmedAccount = true)
+            builder.Services.AddDefaultIdentity<Account>(options => options.SignIn.RequireConfirmedAccount = false)
                 .AddRoles<IdentityRole>() // Add roles if necessary
                 .AddEntityFrameworkStores<AccountContext>();
 
