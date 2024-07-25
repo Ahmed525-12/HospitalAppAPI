@@ -1,4 +1,5 @@
-﻿using HospitalAPP.ErrorHandler;
+﻿using HospitalAPP.Email.Intrefaces;
+using HospitalAPP.ErrorHandler;
 using HospitalAPP.JWTToken.Interace;
 using HospitalAPP.Wrapper.WorkWrapper;
 using HospitalDomain.DTOS;
@@ -6,13 +7,14 @@ using HospitalDomain.Entites.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace HospitalAppAPI.Controllers
 {
     public class AccountController : BaseController
     {
         private readonly ILogger<AccountController> _logger;
-
+        private readonly IEmailSettings _emailSettings;
         private readonly UserManager<Guest> _guestManager;
         private readonly SignInManager<Guest> _signInManagerGuest;
         private readonly UserManager<Employee> _employeeManager;
@@ -28,7 +30,8 @@ namespace HospitalAppAPI.Controllers
         UserManager<Account> accountManager,
         SignInManager<Account> signInManagerAccount,
         ITokenService tokenService,
-            ILogger<AccountController> logger)
+            ILogger<AccountController> logger,
+            IEmailSettings emailSettings)
         {
             _guestManager = guestManager;
             _signInManagerGuest = signInManagerGuest;
@@ -38,6 +41,7 @@ namespace HospitalAppAPI.Controllers
             _signInManagerAccount = signInManagerAccount;
             _tokenService = tokenService;
             _logger = logger;
+            _emailSettings = emailSettings;
         }
 
         [HttpPost("GuestRegister")]
@@ -214,6 +218,44 @@ namespace HospitalAppAPI.Controllers
             catch (Exception ex)
             {
                 return Ok(Result<GuestDto>.Fail(ex.Message));
+            }
+        }
+
+        [HttpPost("SendEmailGuest")]
+        public async Task<IActionResult> SendEmailGuest(ForgetPasswordDto emailinput)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(emailinput.Email))
+                {
+                    return BadRequest("Email input cannot be null or empty.");
+                }
+
+                var user = await _guestManager.FindByEmailAsync(emailinput.Email);
+                if (user != null)
+                {
+                    var token = await _guestManager.GeneratePasswordResetTokenAsync(user);
+                    var resetPasswordLink = Url.Action("ResetPassword", "Auth", new { email = user.Email, Token = token }, Request.Scheme);
+                    var email = new EmailDTO()
+                    {
+                        Subject = "Reset Password",
+                        To = emailinput.Email,
+                        Body = resetPasswordLink,
+                    };
+
+                    _emailSettings.SendEmail(email);
+                    return Ok(Result.Success(token));
+                }
+                else
+                {
+                    return Ok(Result.Fail("Email does not exist."));
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the exception details
+                Console.WriteLine($"Exception: {ex.Message}");
+                return Ok(Result.Fail(ex.Message));
             }
         }
 

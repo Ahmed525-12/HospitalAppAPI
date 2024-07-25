@@ -38,12 +38,14 @@ namespace HospitalAppAPI
             // Configure Identity for Employee
             builder.Services.AddIdentityCore<Employee>(options => { })
                 .AddEntityFrameworkStores<AccountContext>()
-                .AddSignInManager<SignInManager<Employee>>(); // Add SignInManager if needed
+                .AddSignInManager<SignInManager<Employee>>()
+                .AddDefaultTokenProviders(); // Add SignInManager if needed
 
             // Configure Identity for Guest
             builder.Services.AddIdentityCore<Guest>(options => { })
                 .AddEntityFrameworkStores<AccountContext>()
-                .AddSignInManager<SignInManager<Guest>>(); // Add SignInManager if needed
+                .AddSignInManager<SignInManager<Guest>>()
+                .AddDefaultTokenProviders(); // Add SignInManager if needed
             builder.Services.AddAplicationServices();
             builder.Services.AddIdentityServices(builder.Configuration);
 

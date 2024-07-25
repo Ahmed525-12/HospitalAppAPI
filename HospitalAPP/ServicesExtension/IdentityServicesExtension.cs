@@ -1,4 +1,6 @@
-﻿using HospitalAPP.JWTToken.Interace;
+﻿using HospitalAPP.Email.Intrefaces;
+using HospitalAPP.Email.WorkEmail;
+using HospitalAPP.JWTToken.Interace;
 using HospitalAPP.JWTToken.WorkToken;
 using HospitalDomain.Entites.Identity;
 using HospitalInfrastructure.IdentityContext;
@@ -20,6 +22,7 @@ namespace HospitalAPP.ServicesExtension
         public static IServiceCollection AddIdentityServices(this IServiceCollection Services, IConfiguration _configuration)
         {
             Services.AddScoped<ITokenService, TokenService>();
+            Services.AddScoped<IEmailSettings, EmailSettings>();
 
             Services.AddAuthentication(Option =>
             {
