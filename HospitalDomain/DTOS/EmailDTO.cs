@@ -8,7 +8,7 @@ namespace HospitalDomain.DTOS
 {
     public class EmailDTO
     {
-        public int Id { get; set; }
+        public int Id { get; set; } = 1;
 
         public string To { get; set; }
 

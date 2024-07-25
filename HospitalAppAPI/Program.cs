@@ -4,6 +4,10 @@ using HospitalInfrastructure.IdentityContext;
 using HospitalAPP.ServicesExtension;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using HospitalAPP.Email.WorkEmail;
+using HospitalDomain.DTOS;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace HospitalAppAPI
 {
@@ -33,13 +37,14 @@ namespace HospitalAppAPI
             // Configure Identity for Account with default UI
             builder.Services.AddDefaultIdentity<Account>(options => options.SignIn.RequireConfirmedAccount = false)
                 .AddRoles<IdentityRole>() // Add roles if necessary
-                .AddEntityFrameworkStores<AccountContext>();
-
+                .AddEntityFrameworkStores<AccountContext>().AddDefaultTokenProviders();
+            builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
             // Configure Identity for Employee
             builder.Services.AddIdentityCore<Employee>(options => { })
                 .AddEntityFrameworkStores<AccountContext>()
                 .AddSignInManager<SignInManager<Employee>>()
-                .AddDefaultTokenProviders(); // Add SignInManager if needed
+                .AddDefaultTokenProviders();
+            // Add SignInManager if needed
 
             // Configure Identity for Guest
             builder.Services.AddIdentityCore<Guest>(options => { })
