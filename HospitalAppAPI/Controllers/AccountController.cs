@@ -244,7 +244,13 @@ namespace HospitalAppAPI.Controllers
                     };
 
                     _emailSettings.SendEmail(email);
-                    return Ok(Result.Success(token));
+                    var emailsucess = new RecieveEmail()
+                    {
+                        token = token,
+                        email = emailinput.Email,
+                    }
+                        ;
+                    return Ok(Result<RecieveEmail>.Success(emailsucess, "Success"));
                 }
                 else
                 {
@@ -253,8 +259,29 @@ namespace HospitalAppAPI.Controllers
             }
             catch (Exception ex)
             {
-                // Log the exception details
-                Console.WriteLine($"Exception: {ex.Message}");
+                return Ok(Result.Fail(ex.Message));
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ResetPassword(ResetPasswordDto model)
+        {
+            try
+            {
+                var user = await _guestManager.FindByEmailAsync(model.email);
+                var result = await _guestManager.ResetPasswordAsync(user, model.token, model.Password);
+
+                if (result.Succeeded)
+                {
+                    return Ok(Result.Success("Success"));
+                }
+                else
+                {
+                    return Ok(Result.Fail("fail to reset password"));
+                }
+            }
+            catch (Exception ex)
+            {
                 return Ok(Result.Fail(ex.Message));
             }
         }
