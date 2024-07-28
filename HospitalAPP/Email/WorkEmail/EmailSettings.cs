@@ -29,18 +29,32 @@ namespace HospitalAPP.Email.WorkEmail
             };
             mail.To.Add(MailboxAddress.Parse(email.To));
             mail.From.Add(new MailboxAddress(_options.DisplayName, _options.Email));
-            var builder = new BodyBuilder();
-
-            // Set text and HTML bodies
-            builder.TextBody = email.Body; // Plain text body
+            var builder = new BodyBuilder
+            {
+                TextBody = email.Body // Plain text body
+                                      // Uncomment the next line if you have HTML content
+                                      // HtmlBody = "<html><body><p>" + email.Body + "</p></body></html>"
+            };
 
             mail.Body = builder.ToMessageBody();
 
             using var smtp = new SmtpClient();
-            smtp.Connect(_options.Host, _options.Port, MailKit.Security.SecureSocketOptions.StartTls);
-            smtp.Authenticate(_options.Email, _options.Password);
-            smtp.Send(mail);
-            smtp.Disconnect(true);
+            try
+            {
+                smtp.Connect(_options.Host, _options.Port, MailKit.Security.SecureSocketOptions.StartTls);
+                smtp.Authenticate(_options.Email, _options.Password);
+                smtp.Send(mail);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception details for further investigation
+                Console.WriteLine($"Exception: {ex.Message}");
+                throw; // Re-throw the exception to handle it in the calling method
+            }
+            finally
+            {
+                smtp.Disconnect(true);
+            }
         }
     }
 }
