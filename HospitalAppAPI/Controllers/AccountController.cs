@@ -263,7 +263,7 @@ namespace HospitalAppAPI.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpPost("ResetPassword")]
         public async Task<IActionResult> ResetPassword(ResetPasswordDto model)
         {
             try
