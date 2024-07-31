@@ -256,7 +256,7 @@ namespace HospitalAppAPI.Controllers
                 if (user != null)
                 {
                     var token = await _guestManager.GeneratePasswordResetTokenAsync(user);
-                    var resetPasswordLink = $"https://example.com/resetpassword?email={user.Email}&token={token}";
+                    var resetPasswordLink = Url.Action("ResetPassword", "Account", new { email = user.Email, Token = token }, Request.Scheme);
                     var email = new EmailDTO()
                     {
                         Subject = "Reset Password",

@@ -42,17 +42,18 @@ namespace HospitalAppAPI
 
             builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 
-            builder.Services.AddIdentityCore<Employee>(options => { })
-                .AddEntityFrameworkStores<AccountContext>()
-                .AddSignInManager<SignInManager<Employee>>()
-                .AddRoles<IdentityRole>() // Add roles
-                .AddDefaultTokenProviders();
-
-            builder.Services.AddIdentityCore<Guest>(options => { })
+            builder.Services.AddIdentityCore<Guest>(options =>
+            {
+            }).AddRoles<IdentityRole>() // Add roles
                 .AddEntityFrameworkStores<AccountContext>()
                 .AddSignInManager<SignInManager<Guest>>()
-                .AddRoles<IdentityRole>() // Add roles
                 .AddDefaultTokenProviders();
+            builder.Services.AddIdentityCore<Employee>(options =>
+            {
+            }).AddRoles<IdentityRole>() // Add roles
+          .AddEntityFrameworkStores<AccountContext>()
+          .AddSignInManager<SignInManager<Employee>>()
+          .AddDefaultTokenProviders();
 
             builder.Services.AddAplicationServices();
             builder.Services.AddIdentityServices(builder.Configuration);
