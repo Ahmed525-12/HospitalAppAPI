@@ -2,18 +2,12 @@
 using HospitalAPP.Email.WorkEmail;
 using HospitalAPP.JWTToken.Interace;
 using HospitalAPP.JWTToken.WorkToken;
-using HospitalDomain.Entites.Identity;
 using HospitalInfrastructure.IdentityContext;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace HospitalAPP.ServicesExtension
 {
@@ -23,6 +17,8 @@ namespace HospitalAPP.ServicesExtension
         {
             Services.AddScoped<ITokenService, TokenService>();
             Services.AddScoped<IEmailSettings, EmailSettings>();
+
+            // Register other managers similarly
 
             Services.AddAuthentication(Option =>
             {

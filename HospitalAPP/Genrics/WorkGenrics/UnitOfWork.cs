@@ -1,12 +1,7 @@
 ﻿using HospitalAPP.Genrics.Intrefaces;
 using HospitalDomain.Entites.App;
 using HospitalInfrastructure.AppContext;
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HospitalAPP.Genrics.WorkGenrics
 {

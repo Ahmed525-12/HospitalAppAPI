@@ -13,7 +13,7 @@ namespace HospitalAppAPI
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -32,25 +32,28 @@ namespace HospitalAppAPI
 
             // Configure the database context for Identity
             builder.Services.AddDbContext<AccountContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("AppIdentityConnection")));
+                options.UseSqlServer(builder.Configuration.GetConnectionString("AppIdentityConnection")))
+               ;
 
-            // Configure Identity for Account with default UI
             builder.Services.AddDefaultIdentity<Account>(options => options.SignIn.RequireConfirmedAccount = false)
-                .AddRoles<IdentityRole>() // Add roles if necessary
-                .AddEntityFrameworkStores<AccountContext>().AddDefaultTokenProviders();
+            .AddRoles<IdentityRole>() // Add roles
+            .AddEntityFrameworkStores<AccountContext>()
+            t.AddDefaultTokenProviders();
+
             builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
-            // Configure Identity for Employee
+
             builder.Services.AddIdentityCore<Employee>(options => { })
                 .AddEntityFrameworkStores<AccountContext>()
                 .AddSignInManager<SignInManager<Employee>>()
+                .AddRoles<IdentityRole>() // Add roles
                 .AddDefaultTokenProviders();
-            // Add SignInManager if needed
 
-            // Configure Identity for Guest
             builder.Services.AddIdentityCore<Guest>(options => { })
                 .AddEntityFrameworkStores<AccountContext>()
                 .AddSignInManager<SignInManager<Guest>>()
-                .AddDefaultTokenProviders(); // Add SignInManager if needed
+                .AddRoles<IdentityRole>() // Add roles
+                .AddDefaultTokenProviders();
+
             builder.Services.AddAplicationServices();
             builder.Services.AddIdentityServices(builder.Configuration);
 
@@ -71,6 +74,18 @@ namespace HospitalAppAPI
 
             app.MapControllers();
 
+            using (var scope = app.Services.CreateScope())
+            {
+                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+                var roles = new[] { "Guest", "Employee" };
+                foreach (var role in roles)
+                {
+                    if (!await roleManager.RoleExistsAsync(role))
+                    {
+                        await roleManager.CreateAsync(new IdentityRole(role));
+                    }
+                }
+            }
             app.Run();
         }
     }

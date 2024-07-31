@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace HospitalAPP.Wrapper.Interface
+﻿namespace HospitalAPP.Wrapper.Interface
 {
     public interface IResult
     {

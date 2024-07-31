@@ -15,6 +15,7 @@ namespace HospitalAppAPI.Controllers
     {
         private readonly ILogger<AccountController> _logger;
         private readonly IEmailSettings _emailSettings;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly UserManager<Guest> _guestManager;
         private readonly SignInManager<Guest> _signInManagerGuest;
         private readonly UserManager<Employee> _employeeManager;
@@ -31,7 +32,9 @@ namespace HospitalAppAPI.Controllers
         SignInManager<Account> signInManagerAccount,
         ITokenService tokenService,
             ILogger<AccountController> logger,
-            IEmailSettings emailSettings)
+            IEmailSettings emailSettings,
+            RoleManager<IdentityRole> roleManager
+            )
         {
             _guestManager = guestManager;
             _signInManagerGuest = signInManagerGuest;
@@ -42,6 +45,7 @@ namespace HospitalAppAPI.Controllers
             _tokenService = tokenService;
             _logger = logger;
             _emailSettings = emailSettings;
+            _roleManager = roleManager;
         }
 
         [HttpPost("GuestRegister")]
@@ -49,10 +53,15 @@ namespace HospitalAppAPI.Controllers
         {
             try
             {
-                if (CheckIfGuestExist(registerDto.Email).Result.Value)
+                // Check if the guest already exists
+                var guestExists = await CheckIfGuestExist(registerDto.Email);
+                if (guestExists.Value)
+                {
                     return BadRequest(new ApiResponse(400, "This Email Is Already Exist"));
+                }
 
-                var user = new Guest()
+                // Create a new Guest user
+                var user = new Guest
                 {
                     DisplayName = registerDto.DisplayName,
                     Email = registerDto.Email,
@@ -60,11 +69,23 @@ namespace HospitalAppAPI.Controllers
                     UserName = registerDto.Email.Split('@')[0],
                     EmailConfirmed = true
                 };
-                var Result = await _guestManager.CreateAsync(user, registerDto.Password);
 
-                if (!Result.Succeeded) return BadRequest(new ApiResponse(400, "register fail"));
+                // Create the user with the specified password
+                var createResult = await _guestManager.CreateAsync(user, registerDto.Password);
+                if (!createResult.Succeeded)
+                {
+                    return BadRequest(new ApiResponse(400, "Register failed"));
+                }
 
-                var ReturnedUser = new GuestDto()
+                // Add the user to the "Guest" role
+                var roleResult = await _guestManager.AddToRoleAsync(user, "Guest");
+                if (!roleResult.Succeeded)
+                {
+                    return BadRequest(new ApiResponse(400, "Failed to assign role"));
+                }
+
+                // Return the created user with the token
+                var returnedUser = new GuestDto
                 {
                     DisplayName = registerDto.DisplayName,
                     Email = registerDto.Email,
@@ -73,11 +94,11 @@ namespace HospitalAppAPI.Controllers
                     Token = _tokenService.CreateTokenAsync(user)
                 };
 
-                return Ok((Result<GuestDto>.Success(ReturnedUser, "Create successful")));
+                return Ok(Result<GuestDto>.Success(returnedUser, "Create successful"));
             }
             catch (Exception ex)
             {
-                return Ok(Result<Guest>.Fail(ex.Message));
+                return StatusCode(500, new ApiResponse(500, $"Internal server error: {ex.Message}"));
             }
         }
 

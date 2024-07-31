@@ -1,4 +1,5 @@
 ﻿using HospitalDomain.Entites.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace HospitalInfrastructure.IdentityContext
 {
-    public class AccountContext : IdentityDbContext
+    public class AccountContext : IdentityDbContext<Account, IdentityRole, string>
     {
         public DbSet<Employee> Employee { get; set; }
         public DbSet<Guest> Guest { get; set; }
