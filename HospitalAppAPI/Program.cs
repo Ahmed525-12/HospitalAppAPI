@@ -38,7 +38,7 @@ namespace HospitalAppAPI
             builder.Services.AddDefaultIdentity<Account>(options => options.SignIn.RequireConfirmedAccount = false)
             .AddRoles<IdentityRole>() // Add roles
             .AddEntityFrameworkStores<AccountContext>()
-            t.AddDefaultTokenProviders();
+            .AddDefaultTokenProviders();
 
             builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 
