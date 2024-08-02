@@ -122,7 +122,11 @@ namespace HospitalAppAPI.Controllers
                 var Result = await _employeeManager.CreateAsync(user, registerDto.Password);
 
                 if (!Result.Succeeded) return BadRequest(new ApiResponse(400, "register fail"));
-
+                var roleResult = await _employeeManager.AddToRoleAsync(user, "Employee");
+                if (!roleResult.Succeeded)
+                {
+                    return BadRequest(new ApiResponse(400, "Failed to assign role"));
+                }
                 var ReturnedUser = new EmployeeDTO()
                 {
                     DisplayName = registerDto.DisplayName,
