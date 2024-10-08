@@ -1,21 +1,29 @@
-﻿using HospitalAPP.Email.Intrefaces;
+﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Running;
+using CommandLine.Text;
+using HospitalAPP.Email.Intrefaces;
 using HospitalAPP.ErrorHandler;
 using HospitalAPP.JWTToken.Interace;
 using HospitalAPP.Wrapper.WorkWrapper;
+using HospitalAppAPI.Cahceing;
 using HospitalDomain.DTOS;
 using HospitalDomain.Entites.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Crypto.Macs;
 using System.Security.Claims;
 
 namespace HospitalAppAPI.Controllers
 {
+    [MemoryDiagnoser]
+    [ShortRunJob]
     public class AccountController : BaseController
     {
         private readonly ILogger<AccountController> _logger;
         private readonly IEmailSettings _emailSettings;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IRedisCahe _redisCahe;
         private readonly UserManager<Guest> _guestManager;
         private readonly SignInManager<Guest> _signInManagerGuest;
         private readonly UserManager<Employee> _employeeManager;
@@ -33,7 +41,8 @@ namespace HospitalAppAPI.Controllers
         ITokenService tokenService,
             ILogger<AccountController> logger,
             IEmailSettings emailSettings,
-            RoleManager<IdentityRole> roleManager
+            RoleManager<IdentityRole> roleManager,
+            IRedisCahe redisCahe
             )
         {
             _guestManager = guestManager;
@@ -46,32 +55,36 @@ namespace HospitalAppAPI.Controllers
             _logger = logger;
             _emailSettings = emailSettings;
             _roleManager = roleManager;
+            _redisCahe = redisCahe;
         }
 
+        [Benchmark]
         [HttpPost("GuestRegister")]
-        public async Task<ActionResult<GuestDto>> Register(GuestReigsterDTO registerDto)
+        public async Task<ActionResult<GuestDto>> Register()
         {
             try
             {
                 // Check if the guest already exists
-                var guestExists = await CheckIfGuestExist(registerDto.Email);
+                var guestExists = await CheckIfGuestExist("mohab5250067@gmail.com");
                 if (guestExists.Value)
                 {
+                    _logger.LogError("This Email Is Already Exist");
                     return BadRequest(new ApiResponse(400, "This Email Is Already Exist"));
                 }
-
+                {
+                }
                 // Create a new Guest user
                 var user = new Guest
                 {
-                    DisplayName = registerDto.DisplayName,
-                    Email = registerDto.Email,
-                    IdentityCardNumber = registerDto.IdentityCardNumber,
-                    UserName = registerDto.Email.Split('@')[0],
+                    DisplayName = "mohab66666",
+                    Email = "mohab5250067@gmail.com",
+                    IdentityCardNumber = 2437647205,
+                    UserName = "mohab666",
                     EmailConfirmed = true
                 };
 
                 // Create the user with the specified password
-                var createResult = await _guestManager.CreateAsync(user, registerDto.Password);
+                var createResult = await _guestManager.CreateAsync(user, "@Hmed5250047");
                 if (!createResult.Succeeded)
                 {
                     return BadRequest(new ApiResponse(400, "Register failed"));
@@ -87,9 +100,9 @@ namespace HospitalAppAPI.Controllers
                 // Return the created user with the token
                 var returnedUser = new GuestDto
                 {
-                    DisplayName = registerDto.DisplayName,
-                    Email = registerDto.Email,
-                    IdentityCardNumber = registerDto.IdentityCardNumber,
+                    DisplayName = "mohab66666",
+                    Email = "mohab5250067@gmail.com",
+                    IdentityCardNumber = 2437647205,
 
                     Token = _tokenService.CreateTokenAsync(user)
                 };
@@ -98,6 +111,7 @@ namespace HospitalAppAPI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, ex.Message);
                 return StatusCode(500, new ApiResponse(500, $"Internal server error: {ex.Message}"));
             }
         }
@@ -321,6 +335,20 @@ namespace HospitalAppAPI.Controllers
         public async Task<ActionResult<bool>> CheckIfEmployeeExist(string Email)
         {
             return await _employeeManager.FindByEmailAsync(Email) is not null;
+        }
+
+        // GET: api/users
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<IdentityUser>>> GetAllUsers()
+        {
+            var users = _redisCahe.GetData<IEnumerable<IdentityUser>>("Users");
+            if (users is not null)
+            {
+                return Ok(users);
+            }
+            users = _accountManager.Users; // This fetches all users from the database
+            _redisCahe.SetData("Users", users);
+            return Ok(users);
         }
     }
 }

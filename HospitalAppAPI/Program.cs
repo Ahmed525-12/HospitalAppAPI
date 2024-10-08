@@ -4,10 +4,12 @@ using HospitalInfrastructure.IdentityContext;
 using HospitalAPP.ServicesExtension;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
-using HospitalAPP.Email.WorkEmail;
 using HospitalDomain.DTOS;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+using BenchmarkDotNet.Running;
+using HospitalAppAPI.Controllers;
+using BenchmarkDotNet.Configs;
+using Serilog;
+using HospitalAppAPI.Cahceing;
 
 namespace HospitalAppAPI
 {
@@ -15,6 +17,9 @@ namespace HospitalAppAPI
     {
         public static async Task Main(string[] args)
         {
+            var config = ManualConfig.Create(DefaultConfig.Instance)
+                         .WithOptions(ConfigOptions.DisableOptimizationsValidator);
+            BenchmarkRunner.Run<AccountController>(config);
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
@@ -23,7 +28,8 @@ namespace HospitalAppAPI
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-
+            var logger = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration).CreateLogger();
+            builder.Logging.AddSerilog(logger);
             // Configure the database context for Hospital
             builder.Services.AddDbContext<HospitalContext>(options =>
             {
@@ -34,6 +40,13 @@ namespace HospitalAppAPI
             builder.Services.AddDbContext<AccountContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("AppIdentityConnection")))
                ;
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = builder.Configuration.GetConnectionString("Redis");
+                options.InstanceName = "Hospital_";
+            });
+
+            builder.Services.AddScoped<IRedisCahe, RedisCahe>();
 
             builder.Services.AddDefaultIdentity<Account>(options => options.SignIn.RequireConfirmedAccount = false)
             .AddRoles<IdentityRole>() // Add roles
