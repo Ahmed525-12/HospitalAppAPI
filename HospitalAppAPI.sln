@@ -5,11 +5,13 @@ VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HospitalAppAPI", "HospitalAppAPI\HospitalAppAPI.csproj", "{A131CB65-6CE9-4E69-B992-FFB7994573CE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HospitalDomain", "HospitalDomain\HospitalDomain.csproj", "{11572C2D-69F0-43CE-91CC-C9CF95168DE2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HospitalDomain", "HospitalDomain\HospitalDomain.csproj", "{11572C2D-69F0-43CE-91CC-C9CF95168DE2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HospitalAPP", "HospitalAPP\HospitalAPP.csproj", "{20C4B826-7067-4C4C-B7BC-C024A69B8025}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HospitalAPP", "HospitalAPP\HospitalAPP.csproj", "{20C4B826-7067-4C4C-B7BC-C024A69B8025}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HospitalInfrastructure", "HospitalInfrastructure\HospitalInfrastructure.csproj", "{E3C74933-4AA4-4438-8D4D-F255DE1ACAB4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HospitalInfrastructure", "HospitalInfrastructure\HospitalInfrastructure.csproj", "{E3C74933-4AA4-4438-8D4D-F255DE1ACAB4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hospital.Tests", "Hospital.Tests\Hospital.Tests.csproj", "{285957D6-58C3-4A18-9C1C-E9D651CB9983}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{E3C74933-4AA4-4438-8D4D-F255DE1ACAB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E3C74933-4AA4-4438-8D4D-F255DE1ACAB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E3C74933-4AA4-4438-8D4D-F255DE1ACAB4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{285957D6-58C3-4A18-9C1C-E9D651CB9983}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{285957D6-58C3-4A18-9C1C-E9D651CB9983}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{285957D6-58C3-4A18-9C1C-E9D651CB9983}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{285957D6-58C3-4A18-9C1C-E9D651CB9983}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

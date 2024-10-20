@@ -20,7 +20,6 @@ namespace HospitalAppAPI.Controllers
     [ShortRunJob]
     public class AccountController : BaseController
     {
-        private readonly ILogger<AccountController> _logger;
         private readonly IEmailSettings _emailSettings;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IRedisCahe _redisCahe;
@@ -39,11 +38,11 @@ namespace HospitalAppAPI.Controllers
         UserManager<Account> accountManager,
         SignInManager<Account> signInManagerAccount,
         ITokenService tokenService,
-            ILogger<AccountController> logger,
+       ILogger<AccountController> logger,
             IEmailSettings emailSettings,
             RoleManager<IdentityRole> roleManager,
             IRedisCahe redisCahe
-            )
+            ) : base(logger)
         {
             _guestManager = guestManager;
             _signInManagerGuest = signInManagerGuest;
@@ -52,7 +51,7 @@ namespace HospitalAppAPI.Controllers
             _accountManager = accountManager;
             _signInManagerAccount = signInManagerAccount;
             _tokenService = tokenService;
-            _logger = logger;
+
             _emailSettings = emailSettings;
             _roleManager = roleManager;
             _redisCahe = redisCahe;

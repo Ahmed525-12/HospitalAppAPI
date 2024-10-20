@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using HospitalDomain.Entites.Identity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 
 namespace HospitalAppAPI.Controllers
 {
@@ -6,5 +8,11 @@ namespace HospitalAppAPI.Controllers
     [ApiController]
     public class BaseController : ControllerBase
     {
+        protected readonly ILogger<AccountController> _logger;
+
+        public BaseController(ILogger<AccountController> logger, SignInManager<Account> signInManagerAccount = null)
+        {
+            _logger = logger;
+        }
     }
 }
