@@ -1,4 +1,6 @@
-﻿namespace HospitalDomain.DTOS
+﻿using System.Text.Json.Serialization;
+
+namespace HospitalDomain.DTOS
 {
     public class EmployeeDTO
     {
@@ -7,5 +9,10 @@
         public DateTime ShiftOfWork { get; set; }
         public string DisplayName { get; set; }
         public string Token { get; set; }
+
+        [JsonIgnore]
+        public string? RefreshToken { get; set; }
+
+        public DateTime RefreshTokenExpiration { get; set; }
     }
 }

@@ -57,7 +57,6 @@ namespace HospitalAppAPI.Controllers
             _redisCahe = redisCahe;
         }
 
-        [Benchmark]
         [HttpPost("GuestRegister")]
         public async Task<ActionResult<GuestDto>> Register()
         {
@@ -140,6 +139,7 @@ namespace HospitalAppAPI.Controllers
                 {
                     return BadRequest(new ApiResponse(400, "Failed to assign role"));
                 }
+
                 var ReturnedUser = new EmployeeDTO()
                 {
                     DisplayName = registerDto.DisplayName,
@@ -147,6 +147,23 @@ namespace HospitalAppAPI.Controllers
 
                     Token = _tokenService.CreateTokenAsync(user)
                 };
+
+                if (user.RefreshToken.Any(t => t.IsAvtive))
+                {
+                    var activeRefreshToken = user.RefreshToken.FirstOrDefault(t => t.IsAvtive);
+                    ReturnedUser.RefreshToken = activeRefreshToken.Token;
+                    ReturnedUser.RefreshTokenExpiration = activeRefreshToken.Expireson;
+                    setRefreshTokenCookie(activeRefreshToken.Token, activeRefreshToken.Expireson);
+                }
+                else
+                {
+                    var refreshToken = _tokenService.CreateRefreshTokenAsync();
+                    ReturnedUser.RefreshToken = refreshToken.Token;
+                    ReturnedUser.RefreshTokenExpiration = refreshToken.Expireson;
+                    user.RefreshToken.Add(refreshToken);
+                    await _employeeManager.UpdateAsync(user);
+                    setRefreshTokenCookie(refreshToken.Token, refreshToken.Expireson);
+                }
 
                 return Ok((Result<EmployeeDTO>.Success(ReturnedUser, "Create successful")));
             }
@@ -196,6 +213,22 @@ namespace HospitalAppAPI.Controllers
                     Email = logInDto.Email,
                     Token = _tokenService.CreateTokenAsync(user)
                 };
+                if (user.RefreshToken.Any(t => t.IsAvtive))
+                {
+                    var activeRefreshToken = user.RefreshToken.FirstOrDefault(t => t.IsAvtive);
+                    returnedUser.RefreshToken = activeRefreshToken.Token;
+                    returnedUser.RefreshTokenExpiration = activeRefreshToken.Expireson;
+                    setRefreshTokenCookie(activeRefreshToken.Token, activeRefreshToken.Expireson);
+                }
+                else
+                {
+                    var refreshToken = _tokenService.CreateRefreshTokenAsync();
+                    returnedUser.RefreshToken = refreshToken.Token;
+                    returnedUser.RefreshTokenExpiration = refreshToken.Expireson;
+                    user.RefreshToken.Add(refreshToken);
+                    await _employeeManager.UpdateAsync(user);
+                    setRefreshTokenCookie(refreshToken.Token, refreshToken.Expireson);
+                }
 
                 return Ok((Result<EmployeeDTO>.Success(returnedUser, "Create successful")));
             }
@@ -348,6 +381,16 @@ namespace HospitalAppAPI.Controllers
             users = _accountManager.Users; // This fetches all users from the database
             _redisCahe.SetData("Users", users);
             return Ok(users);
+        }
+
+        private void setRefreshTokenCookie(string refreshToken, DateTime expires)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                Expires = expires.ToLocalTime(),
+                HttpOnly = true
+            };
+            Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
         }
     }
 }

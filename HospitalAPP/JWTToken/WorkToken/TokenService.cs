@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace HospitalAPP.JWTToken.WorkToken
@@ -15,6 +16,26 @@ namespace HospitalAPP.JWTToken.WorkToken
         public TokenService(IConfiguration configuration)
         {
             _configuration = configuration;
+        }
+
+        public RefreshTokens CreateRefreshTokenAsync()
+        {
+            return new RefreshTokens
+            {
+                Token = GenerateSecureToken(),
+                Expireson = DateTime.UtcNow.AddDays(10),
+                CreatedAt = DateTime.UtcNow
+            };
+        }
+
+        private string GenerateSecureToken()
+        {
+            var randomNumber = new byte[64];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomNumber);
+                return Convert.ToBase64String(randomNumber);
+            }
         }
 
         public string CreateTokenAsync(Account user)
@@ -36,6 +57,7 @@ namespace HospitalAPP.JWTToken.WorkToken
                 expires: DateTime.Now.AddDays(double.Parse(_configuration["JWT:Expire"])),
                 claims: UserClaim,
                 signingCredentials: new SigningCredentials(Key, SecurityAlgorithms.HmacSha256Signature)
+
                 );
 
             return new JwtSecurityTokenHandler().WriteToken(Token);

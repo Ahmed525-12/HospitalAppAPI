@@ -35,7 +35,8 @@ namespace HospitalAPP.ServicesExtension
                             ValidAudience = _configuration["JWT:Audience"],
                             ValidateLifetime = true,
                             ValidateIssuerSigningKey = true,
-                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Key"]))
+                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Key"])),
+                            ClockSkew = TimeSpan.Zero
                         };
                     });
             return Services;
