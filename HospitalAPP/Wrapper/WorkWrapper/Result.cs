@@ -2,9 +2,9 @@
 
 namespace HospitalAPP.Wrapper.WorkWrapper
 {
-    public class Result : IResult
+    public class ResultResponse : IResult
     {
-        public Result()
+        public ResultResponse()
         {
         }
 
@@ -14,17 +14,17 @@ namespace HospitalAPP.Wrapper.WorkWrapper
 
         public static IResult Fail()
         {
-            return new Result { Succeeded = false };
+            return new ResultResponse { Succeeded = false };
         }
 
         public static IResult Fail(string message)
         {
-            return new Result { Succeeded = false, Messages = new List<string> { message } };
+            return new ResultResponse { Succeeded = false, Messages = new List<string> { message } };
         }
 
         public static IResult Fail(List<string> messages)
         {
-            return new Result { Succeeded = false, Messages = messages };
+            return new ResultResponse { Succeeded = false, Messages = messages };
         }
 
         public static Task<IResult> FailAsync()
@@ -44,12 +44,12 @@ namespace HospitalAPP.Wrapper.WorkWrapper
 
         public static IResult Success()
         {
-            return new Result { Succeeded = true };
+            return new ResultResponse { Succeeded = true };
         }
 
         public static IResult Success(string message)
         {
-            return new Result { Succeeded = true, Messages = new List<string> { message } };
+            return new ResultResponse { Succeeded = true, Messages = new List<string> { message } };
         }
 
         public static Task<IResult> SuccessAsync()
@@ -63,80 +63,80 @@ namespace HospitalAPP.Wrapper.WorkWrapper
         }
     }
 
-    public class Result<T> : Result, IResult<T>
+    public class ResultResponse<T> : ResultResponse, IResult<T>
     {
-        public Result()
+        public ResultResponse()
         {
         }
 
         public T Data { get; set; }
 
-        public new static Result<T> Fail()
+        public new static ResultResponse<T> Fail()
         {
-            return new Result<T> { Succeeded = false };
+            return new ResultResponse<T> { Succeeded = false };
         }
 
-        public new static Result<T> Fail(string message)
+        public new static ResultResponse<T> Fail(string message)
         {
-            return new Result<T> { Succeeded = false, Messages = new List<string> { message } };
+            return new ResultResponse<T> { Succeeded = false, Messages = new List<string> { message } };
         }
 
-        public new static Result<T> Fail(List<string> messages)
+        public new static ResultResponse<T> Fail(List<string> messages)
         {
-            return new Result<T> { Succeeded = false, Messages = messages };
+            return new ResultResponse<T> { Succeeded = false, Messages = messages };
         }
 
-        public new static Task<Result<T>> FailAsync()
+        public new static Task<ResultResponse<T>> FailAsync()
         {
             return Task.FromResult(Fail());
         }
 
-        public new static Task<Result<T>> FailAsync(string message)
+        public new static Task<ResultResponse<T>> FailAsync(string message)
         {
             return Task.FromResult(Fail(message));
         }
 
-        public new static Task<Result<T>> FailAsync(List<string> messages)
+        public new static Task<ResultResponse<T>> FailAsync(List<string> messages)
         {
             return Task.FromResult(Fail(messages));
         }
 
-        public new static Result<T> Success()
+        public new static ResultResponse<T> Success()
         {
-            return new Result<T> { Succeeded = true };
+            return new ResultResponse<T> { Succeeded = true };
         }
 
-        public new static Result<T> Success(string message)
+        public new static ResultResponse<T> Success(string message)
         {
-            return new Result<T> { Succeeded = true, Messages = new List<string> { message } };
+            return new ResultResponse<T> { Succeeded = true, Messages = new List<string> { message } };
         }
 
-        public static Result<T> Success(T data)
+        public static ResultResponse<T> Success(T data)
         {
-            return new Result<T> { Succeeded = true, Data = data };
+            return new ResultResponse<T> { Succeeded = true, Data = data };
         }
 
-        public static Result<T> Success(T data, string message)
+        public static ResultResponse<T> Success(T data, string message)
         {
-            return new Result<T> { Succeeded = true, Data = data, Messages = new List<string> { message } };
+            return new ResultResponse<T> { Succeeded = true, Data = data, Messages = new List<string> { message } };
         }
 
-        public static Result<T> Success(T data, List<string> messages)
+        public static ResultResponse<T> Success(T data, List<string> messages)
         {
-            return new Result<T> { Succeeded = true, Data = data, Messages = messages };
+            return new ResultResponse<T> { Succeeded = true, Data = data, Messages = messages };
         }
 
-        public new static Task<Result<T>> SuccessAsync(string message)
+        public new static Task<ResultResponse<T>> SuccessAsync(string message)
         {
             return Task.FromResult(Success(message));
         }
 
-        public static Task<Result<T>> SuccessAsync(T data)
+        public static Task<ResultResponse<T>> SuccessAsync(T data)
         {
             return Task.FromResult(Success(data));
         }
 
-        public static Task<Result<T>> SuccessAsync(T data, string message)
+        public static Task<ResultResponse<T>> SuccessAsync(T data, string message)
         {
             return Task.FromResult(Success(data, message));
         }

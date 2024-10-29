@@ -8,5 +8,6 @@ namespace HospitalDomain.Entites.Identity
         public int Rating { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public List<RefreshTokens>? RefreshToken { get; set; }
+        public string ImageUrl { get; set; }
     }
 }

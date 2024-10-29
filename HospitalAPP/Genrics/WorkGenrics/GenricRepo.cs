@@ -22,7 +22,7 @@ namespace HospitalAPP.Genrics.WorkGenrics
             _dbContext.Remove(item);
         }
 
-        public async Task<IEnumerable<T>> GetAllWithAsync() => await _dbContext.Set<T>().ToListAsync();
+        public async Task<IEnumerable<T>> GetAllWithAsync() => await _dbContext.Set<T>().AsNoTracking().ToListAsync();
 
         public async Task<T?> GetbyIdAsync(int id) => await _dbContext.Set<T>().FindAsync(id);
 

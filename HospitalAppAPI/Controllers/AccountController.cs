@@ -6,6 +6,7 @@ using HospitalAPP.ErrorHandler;
 using HospitalAPP.JWTToken.Interace;
 using HospitalAPP.Wrapper.WorkWrapper;
 using HospitalAppAPI.Cahceing;
+using HospitalAppAPI.UploadImage;
 using HospitalDomain.DTOS;
 using HospitalDomain.Entites.Identity;
 using Microsoft.AspNetCore.Http;
@@ -23,6 +24,7 @@ namespace HospitalAppAPI.Controllers
         private readonly IEmailSettings _emailSettings;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IRedisCahe _redisCahe;
+        private readonly ImageKitService _imageKitService;
         private readonly UserManager<Guest> _guestManager;
         private readonly SignInManager<Guest> _signInManagerGuest;
         private readonly UserManager<Employee> _employeeManager;
@@ -41,7 +43,8 @@ namespace HospitalAppAPI.Controllers
        ILogger<AccountController> logger,
             IEmailSettings emailSettings,
             RoleManager<IdentityRole> roleManager,
-            IRedisCahe redisCahe
+            IRedisCahe redisCahe,
+            ImageKitService imageKitService
             ) : base(logger)
         {
             _guestManager = guestManager;
@@ -55,6 +58,7 @@ namespace HospitalAppAPI.Controllers
             _emailSettings = emailSettings;
             _roleManager = roleManager;
             _redisCahe = redisCahe;
+            _imageKitService = imageKitService;
         }
 
         [HttpPost("GuestRegister")]
@@ -105,7 +109,7 @@ namespace HospitalAppAPI.Controllers
                     Token = _tokenService.CreateTokenAsync(user)
                 };
 
-                return Ok(Result<GuestDto>.Success(returnedUser, "Create successful"));
+                return Ok(ResultResponse<GuestDto>.Success(returnedUser, "Create successful"));
             }
             catch (Exception ex)
             {
@@ -115,61 +119,78 @@ namespace HospitalAppAPI.Controllers
         }
 
         [HttpPost("EmployeeRegister")]
-        public async Task<ActionResult<EmployeeDTO>> EmployeeRegister(EmployeeDTORegister registerDto)
+        public async Task<ActionResult<EmployeeDTO>> EmployeeRegister([FromForm] EmployeeDTORegister registerDto, IFormFile imageFile)
         {
             try
             {
-                if (CheckIfEmployeeExist(registerDto.Email).Result.Value)
+                // Check if the employee already exists
+                if ((await CheckIfEmployeeExist(registerDto.Email)).Value)
                     return BadRequest(new ApiResponse(400, "This Email Is Already Exist"));
 
-                var user = new Employee()
+                // Upload image to ImageKit and get the image URL
+                if (imageFile == null || imageFile.Length == 0)
+                    return BadRequest(new ApiResponse(400, "Image file is required."));
+
+                using var memoryStream = new MemoryStream();
+                await imageFile.CopyToAsync(memoryStream);
+                var imageBytes = memoryStream.ToArray();
+
+                // Assuming ImageKitService is injected and available
+                var imageUrl = await _imageKitService.UploadImageAsync(imageBytes, imageFile.FileName);
+                // Set the image URL in the DTO
+
+                // Create a new employee entity
+                var user = new Employee
                 {
                     DisplayName = registerDto.DisplayName,
                     Email = registerDto.Email,
                     UserName = registerDto.Email.Split('@')[0],
                     Salary = registerDto.Salary,
                     ShiftOfWork = registerDto.ShiftOfWork,
-                    EmailConfirmed = true
+                    EmailConfirmed = true,
+                    ImageUrl = imageUrl
                 };
-                var Result = await _employeeManager.CreateAsync(user, registerDto.Password);
 
-                if (!Result.Succeeded) return BadRequest(new ApiResponse(400, "register fail"));
+                var createResult = await _employeeManager.CreateAsync(user, registerDto.Password);
+                if (!createResult.Succeeded)
+                    return BadRequest(new ApiResponse(400, "Registration failed."));
+
                 var roleResult = await _employeeManager.AddToRoleAsync(user, "Employee");
                 if (!roleResult.Succeeded)
-                {
-                    return BadRequest(new ApiResponse(400, "Failed to assign role"));
-                }
+                    return BadRequest(new ApiResponse(400, "Failed to assign role."));
 
-                var ReturnedUser = new EmployeeDTO()
+                // Prepare the DTO to return to the user
+                var returnedUser = new EmployeeDTO
                 {
                     DisplayName = registerDto.DisplayName,
                     Email = registerDto.Email,
-
+                    ImageUrl = imageUrl, // Pass the image URL back to the user
                     Token = _tokenService.CreateTokenAsync(user)
                 };
 
+                // Handle refresh tokens
                 if (user.RefreshToken.Any(t => t.IsAvtive))
                 {
-                    var activeRefreshToken = user.RefreshToken.FirstOrDefault(t => t.IsAvtive);
-                    ReturnedUser.RefreshToken = activeRefreshToken.Token;
-                    ReturnedUser.RefreshTokenExpiration = activeRefreshToken.Expireson;
-                    setRefreshTokenCookie(activeRefreshToken.Token, activeRefreshToken.Expireson);
+                    var activeToken = user.RefreshToken.First(t => t.IsAvtive);
+                    returnedUser.RefreshToken = activeToken.Token;
+                    returnedUser.RefreshTokenExpiration = activeToken.Expireson;
+                    setRefreshTokenCookie(activeToken.Token, activeToken.Expireson);
                 }
                 else
                 {
                     var refreshToken = _tokenService.CreateRefreshTokenAsync();
-                    ReturnedUser.RefreshToken = refreshToken.Token;
-                    ReturnedUser.RefreshTokenExpiration = refreshToken.Expireson;
+                    returnedUser.RefreshToken = refreshToken.Token;
+                    returnedUser.RefreshTokenExpiration = refreshToken.Expireson;
                     user.RefreshToken.Add(refreshToken);
                     await _employeeManager.UpdateAsync(user);
                     setRefreshTokenCookie(refreshToken.Token, refreshToken.Expireson);
                 }
 
-                return Ok((Result<EmployeeDTO>.Success(ReturnedUser, "Create successful")));
+                return Ok(ResultResponse<EmployeeDTO>.Success(returnedUser, "Registration successful"));
             }
             catch (Exception ex)
             {
-                return Ok(Result<EmployeeDTO>.Fail(ex.Message));
+                return Ok(ResultResponse<EmployeeDTO>.Fail(ex.Message));
             }
         }
 
@@ -230,11 +251,11 @@ namespace HospitalAppAPI.Controllers
                     setRefreshTokenCookie(refreshToken.Token, refreshToken.Expireson);
                 }
 
-                return Ok((Result<EmployeeDTO>.Success(returnedUser, "Create successful")));
+                return Ok((ResultResponse<EmployeeDTO>.Success(returnedUser, "Create successful")));
             }
             catch (Exception ex)
             {
-                return Ok(Result<EmployeeDTO>.Fail(ex.Message));
+                return Ok(ResultResponse<EmployeeDTO>.Fail(ex.Message));
             }
         }
 
@@ -284,11 +305,11 @@ namespace HospitalAppAPI.Controllers
                     Token = _tokenService.CreateTokenAsync(user)
                 };
 
-                return Ok((Result<GuestDto>.Success(returnedUser, "Create successful")));
+                return Ok((ResultResponse<GuestDto>.Success(returnedUser, "Create successful")));
             }
             catch (Exception ex)
             {
-                return Ok(Result<GuestDto>.Fail(ex.Message));
+                return Ok(ResultResponse<GuestDto>.Fail(ex.Message));
             }
         }
 
@@ -321,16 +342,16 @@ namespace HospitalAppAPI.Controllers
                         email = emailinput.Email,
                     }
                         ;
-                    return Ok(Result<RecieveEmail>.Success(emailsucess, "Success"));
+                    return Ok(ResultResponse<RecieveEmail>.Success(emailsucess, "Success"));
                 }
                 else
                 {
-                    return Ok(Result.Fail("Email does not exist."));
+                    return Ok(ResultResponse.Fail("Email does not exist."));
                 }
             }
             catch (Exception ex)
             {
-                return Ok(Result.Fail(ex.Message));
+                return Ok(ResultResponse.Fail(ex.Message));
             }
         }
 
@@ -344,16 +365,16 @@ namespace HospitalAppAPI.Controllers
 
                 if (result.Succeeded)
                 {
-                    return Ok(Result.Success("Success"));
+                    return Ok(ResultResponse.Success("Success"));
                 }
                 else
                 {
-                    return Ok(Result.Fail("fail to reset password"));
+                    return Ok(ResultResponse.Fail("fail to reset password"));
                 }
             }
             catch (Exception ex)
             {
-                return Ok(Result.Fail(ex.Message));
+                return Ok(ResultResponse.Fail(ex.Message));
             }
         }
 

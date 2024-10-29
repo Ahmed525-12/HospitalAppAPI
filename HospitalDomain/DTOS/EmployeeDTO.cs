@@ -13,6 +13,7 @@ namespace HospitalDomain.DTOS
         [JsonIgnore]
         public string? RefreshToken { get; set; }
 
+        public string ImageUrl { get; set; }
         public DateTime RefreshTokenExpiration { get; set; }
     }
 }

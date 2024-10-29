@@ -10,6 +10,7 @@ using HospitalAppAPI.Controllers;
 using BenchmarkDotNet.Configs;
 using Serilog;
 using HospitalAppAPI.Cahceing;
+using HospitalAppAPI.UploadImage;
 
 namespace HospitalAppAPI
 {
@@ -22,12 +23,11 @@ namespace HospitalAppAPI
             BenchmarkRunner.Run<AccountController>(config);
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
-
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            builder.Services.AddScoped<ImageKitService>(); // Or AddSingleton if you prefer a singleton instance
             var logger = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration).CreateLogger();
             builder.Logging.AddSerilog(logger);
             // Configure the database context for Hospital
